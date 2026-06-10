@@ -604,7 +604,7 @@ CreateSlider(CombatTab, "Hitbox Size", 2, 50, 10, Color3.fromRGB(150, 50, 255), 
     hitboxSize = val
 end)
 
--- BACK AND FORTH SCRIPT SECTION
+-- TARGET PLAYER SCRIPT SECTION
 CreatePlayerSelect(CombatTab, "Target Player", Color3.fromRGB(255, 100, 200), function(target)
     selectedBnfTarget = target
 end)
@@ -617,6 +617,20 @@ CreateToggle(CombatTab, "Go! (Back & Forth)", Color3.fromRGB(255, 50, 150), func
     end
 end)
 
+CreateButton(CombatTab, "Explode Target Player", Color3.fromRGB(255, 50, 50), function() -- Red
+    if selectedBnfTarget and selectedBnfTarget.Character and selectedBnfTarget.Character:FindFirstChild("HumanoidRootPart") then
+        local exp = Instance.new("Explosion")
+        exp.Position = selectedBnfTarget.Character.HumanoidRootPart.Position
+        exp.ExplosionType = Enum.ExplosionType.NoCraters
+        exp.BlastRadius = 15
+        exp.Parent = workspace
+        
+        -- Try to break joints if the exploit allows server-side replication
+        pcall(function()
+            selectedBnfTarget.Character:BreakJoints()
+        end)
+    end
+end)
 
 -- MOVEMENT SCRIPTS
 CreateToggle(MovementTab, "Flight Mode", Color3.fromRGB(50, 100, 255), function(state)
@@ -703,7 +717,7 @@ CreateButton(MiscTab, "Get Teleport Tool (Click TP)", Color3.fromRGB(200, 50, 25
     end)
 end)
 
-CreateButton(MiscTab, "Explode Body", Color3.fromRGB(255, 50, 50), function() -- Red
+CreateButton(MiscTab, "Explode Self", Color3.fromRGB(255, 50, 50), function() -- Red
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local exp = Instance.new("Explosion")
         exp.Position = player.Character.HumanoidRootPart.Position
