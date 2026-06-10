@@ -179,7 +179,7 @@ Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "NAVIS V2 - (Press K to Toggle)"
+Title.Text = "NAVIS GALAXY"
 Title.TextSize = 18
 Title.ZIndex = 2
 MakeTextNeonWhite(Title)
