@@ -1,5 +1,5 @@
 -- ==========================================
--- NAVIS V2 - CUSTOM NEON UI (Tabs + Neon Red Outline + More Scripts)
+-- NAVIS V2 - DEEP NAVY GALAXY
 -- ==========================================
 
 local player = game.Players.LocalPlayer
@@ -9,11 +9,15 @@ local userInputService = game:GetService("UserInputService")
 local workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 
 -- Cheat Variables
 local flying = false
 local speed = 50
+local vFlyEnabled = false
+local vFlySpeed = 50
+local swimEnabled = false
 local noclip = false
 local infJump = false
 local isAimbotting = false
@@ -25,9 +29,13 @@ local spinSpeed = 25
 local hitboxEnabled = false
 local hitboxSize = 10
 
+local bnfEnabled = false
+local selectedBnfTarget = nil
+
 local flyCtrl = {f = 0, b = 0, l = 0, r = 0}
 local lastCtrl = {f = 0, b = 0, l = 0, r = 0}
 local bg, bv
+local vbg, vbv
 local aimbotLoop
 local espHighlights = {}
 
@@ -52,7 +60,7 @@ end
 -- ==========================================
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "NavisV2_Neon"
+ScreenGui.Name = "NavisV2_Galaxy"
 ScreenGui.ResetOnSpawn = false
 
 local success, err = pcall(function()
@@ -65,45 +73,129 @@ end
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+MainFrame.BackgroundColor3 = Color3.fromRGB(11, 22, 39) -- Dark Navy based on your image
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -225, 0.5, -200)
 MainFrame.Size = UDim2.new(0, 450, 0, 450)
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
 
--- THE NEON RED OUTLINE YOU REQUESTED
 local MainGlow = Instance.new("UIStroke")
 MainGlow.Parent = MainFrame
-MainGlow.Color = Color3.fromRGB(255, 0, 0) -- Neon Red
+MainGlow.Color = Color3.fromRGB(0, 150, 255) -- Bright Neon Blue
 MainGlow.Thickness = 2.5
 MainGlow.Transparency = 0.1
 
+-- ==========================================
+-- GALAXY BACKGROUND SCRIPTING
+-- ==========================================
+local bgContainer = Instance.new("Frame")
+bgContainer.Name = "GalaxyBG"
+bgContainer.Parent = MainFrame
+bgContainer.Size = UDim2.new(1, 0, 1, 0)
+bgContainer.BackgroundTransparency = 1
+bgContainer.ZIndex = 0
+
+-- Static Twinkling Stars (more subtle)
+local function createStar()
+    local star = Instance.new("Frame")
+    star.Parent = bgContainer
+    star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    local size = math.random(1, 2)
+    star.Size = UDim2.new(0, size, 0, size)
+    star.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    star.BorderSizePixel = 0
+    star.ZIndex = 0
+    star.BackgroundTransparency = 0.5
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = star
+    
+    task.spawn(function()
+        while star and star.Parent do
+            local tweenInfo = TweenInfo.new(math.random(3, 6), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+            local tween = TweenService:Create(star, tweenInfo, {BackgroundTransparency = math.random(7, 10)/10})
+            tween:Play()
+            tween.Completed:Wait()
+            
+            local tweenInfo2 = TweenInfo.new(math.random(3, 6), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+            local tween2 = TweenService:Create(star, tweenInfo2, {BackgroundTransparency = 0.3})
+            tween2:Play()
+            tween2.Completed:Wait()
+        end
+    end)
+end
+
+for i = 1, 50 do
+    createStar()
+end
+
+-- Shooting Stars (more subtle)
+local function createShootingStar()
+    local sStar = Instance.new("Frame")
+    sStar.Parent = bgContainer
+    sStar.BackgroundColor3 = Color3.fromRGB(150, 200, 255)
+    sStar.BackgroundTransparency = 0.4
+    sStar.BorderSizePixel = 0
+    sStar.Size = UDim2.new(0, math.random(20, 60), 0, 1)
+    
+    local angle = math.random(30, 60)
+    sStar.Rotation = angle
+    sStar.ZIndex = 0
+    
+    local startX = (math.random(20, 150) / 100) 
+    local startY = -0.2
+    sStar.Position = UDim2.new(startX, 0, startY, 0)
+    
+    local endPos = UDim2.new(startX - 1.5, 0, 1.5, 0) 
+    
+    local tweenInfo = TweenInfo.new(math.random(8, 20)/10, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(sStar, tweenInfo, {Position = endPos})
+    tween:Play()
+    
+    tween.Completed:Connect(function()
+        sStar:Destroy()
+    end)
+end
+
+task.spawn(function()
+    while bgContainer and bgContainer.Parent do
+        task.wait(math.random(20, 50) / 10) 
+        createShootingStar()
+    end
+end)
+
+-- ==========================================
+-- FOREGROUND UI ELEMENTS
+-- ==========================================
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "NAVIS Cheats V2 "
+Title.Text = "NAVIS V2 - (Press K to Toggle)"
 Title.TextSize = 18
+Title.ZIndex = 2
 MakeTextNeonWhite(Title)
 
 local TitleGlow = Instance.new("UIStroke")
 TitleGlow.Parent = Title
-TitleGlow.Color = Color3.fromRGB(255, 0, 0) -- Match neon red
+TitleGlow.Color = Color3.fromRGB(0, 150, 255)
 TitleGlow.Thickness = 1
 TitleGlow.Transparency = 0.3
 
--- Tab Bar
 local TabBar = Instance.new("Frame")
 TabBar.Parent = MainFrame
 TabBar.BackgroundTransparency = 1
 TabBar.Position = UDim2.new(0, 15, 0, 45)
 TabBar.Size = UDim2.new(1, -30, 0, 35)
+TabBar.ZIndex = 2
 
 local TabListLayout = Instance.new("UIListLayout")
 TabListLayout.Parent = TabBar
@@ -117,15 +209,15 @@ PagesFolder.Parent = MainFrame
 local activeTabBtn = nil
 local activePage = nil
 
--- Function to create a Tab
 local function CreateTab(name)
     local tabBtn = Instance.new("TextButton")
     tabBtn.Parent = TabBar
-    tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
     tabBtn.Size = UDim2.new(0.33, -3, 1, 0)
     tabBtn.Font = Enum.Font.GothamBold
     tabBtn.Text = name
     tabBtn.TextSize = 14
+    tabBtn.ZIndex = 2
     MakeTextNeonWhite(tabBtn)
     
     local tabCorner = Instance.new("UICorner")
@@ -134,7 +226,7 @@ local function CreateTab(name)
     
     local tabGlow = Instance.new("UIStroke")
     tabGlow.Parent = tabBtn
-    tabGlow.Color = Color3.fromRGB(255, 0, 0)
+    tabGlow.Color = Color3.fromRGB(0, 150, 255)
     tabGlow.Thickness = 1
     tabGlow.Transparency = 0.5
     
@@ -144,10 +236,11 @@ local function CreateTab(name)
     page.Position = UDim2.new(0, 15, 0, 90)
     page.Size = UDim2.new(1, -30, 1, -105)
     page.ScrollBarThickness = 4
-    page.CanvasSize = UDim2.new(0, 0, 0, 600)
+    page.CanvasSize = UDim2.new(0, 0, 0, 800) -- Increased to fit more scripts
     page.BorderSizePixel = 0
-    page.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+    page.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
     page.Visible = false
+    page.ZIndex = 2
     
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Parent = page
@@ -156,7 +249,7 @@ local function CreateTab(name)
     
     tabBtn.MouseButton1Click:Connect(function()
         if activeTabBtn then
-            activeTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+            activeTabBtn.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
             activeTabBtn.UIStroke.Transparency = 0.5
             activeTabBtn.UIStroke.Thickness = 1
             activePage.Visible = false
@@ -164,7 +257,7 @@ local function CreateTab(name)
         activeTabBtn = tabBtn
         activePage = page
         
-        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 100)
         tabGlow.Transparency = 0
         tabGlow.Thickness = 2
         page.Visible = true
@@ -173,7 +266,7 @@ local function CreateTab(name)
     if not activePage then
         activeTabBtn = tabBtn
         activePage = page
-        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 100)
         tabGlow.Transparency = 0
         tabGlow.Thickness = 2
         page.Visible = true
@@ -189,12 +282,14 @@ end
 local function CreateToggle(parentPage, name, glowColor, callback)
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Parent = parentPage
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 15, 30)
+    ToggleBtn.BackgroundTransparency = 0.2
     ToggleBtn.BorderSizePixel = 0
     ToggleBtn.Size = UDim2.new(1, -10, 0, 40)
     ToggleBtn.Font = Enum.Font.GothamSemibold
     ToggleBtn.Text = name .. " [OFF]"
     ToggleBtn.TextSize = 14
+    ToggleBtn.ZIndex = 3
     MakeTextNeonWhite(ToggleBtn)
     
     local BtnCorner = Instance.new("UICorner")
@@ -212,12 +307,14 @@ local function CreateToggle(parentPage, name, glowColor, callback)
         state = not state
         if state then
             ToggleBtn.Text = name .. " [ON]"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(20 + (glowColor.R*40), 20 + (glowColor.G*40), 25 + (glowColor.B*40))
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(10 + (glowColor.R*30), 15 + (glowColor.G*30), 30 + (glowColor.B*30))
+            ToggleBtn.BackgroundTransparency = 0
             BtnGlow.Thickness = 2.5
             BtnGlow.Transparency = 0
         else
             ToggleBtn.Text = name .. " [OFF]"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 15, 30)
+            ToggleBtn.BackgroundTransparency = 0.2
             BtnGlow.Thickness = 1.5
             BtnGlow.Transparency = 0.5
         end
@@ -228,8 +325,10 @@ end
 local function CreateSlider(parentPage, name, min, max, default, glowColor, callback)
     local SliderFrame = Instance.new("Frame")
     SliderFrame.Parent = parentPage
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(10, 15, 30)
+    SliderFrame.BackgroundTransparency = 0.2
     SliderFrame.Size = UDim2.new(1, -10, 0, 50)
+    SliderFrame.ZIndex = 3
     
     local SliderCorner = Instance.new("UICorner")
     SliderCorner.CornerRadius = UDim.new(0, 6)
@@ -250,14 +349,16 @@ local function CreateSlider(parentPage, name, min, max, default, glowColor, call
     Label.Text = name .. ": " .. tostring(default)
     Label.TextSize = 13
     Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.ZIndex = 3
     MakeTextNeonWhite(Label)
     
     local Track = Instance.new("Frame")
     Track.Parent = SliderFrame
-    Track.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    Track.BackgroundColor3 = Color3.fromRGB(5, 5, 15)
     Track.Position = UDim2.new(0, 15, 0, 30)
     Track.Size = UDim2.new(1, -30, 0, 10)
     Track.BorderSizePixel = 0
+    Track.ZIndex = 3
     
     local TrackCorner = Instance.new("UICorner")
     TrackCorner.CornerRadius = UDim.new(1, 0)
@@ -274,6 +375,7 @@ local function CreateSlider(parentPage, name, min, max, default, glowColor, call
     Fill.BackgroundColor3 = glowColor
     Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
     Fill.BorderSizePixel = 0
+    Fill.ZIndex = 3
     
     local FillCorner = Instance.new("UICorner")
     FillCorner.CornerRadius = UDim.new(1, 0)
@@ -309,19 +411,180 @@ local function CreateSlider(parentPage, name, min, max, default, glowColor, call
     end)
 end
 
+-- Function for simple clickable buttons
+local function CreateButton(parentPage, name, glowColor, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = parentPage
+    Btn.BackgroundColor3 = Color3.fromRGB(10, 15, 30)
+    Btn.BackgroundTransparency = 0.2
+    Btn.BorderSizePixel = 0
+    Btn.Size = UDim2.new(1, -10, 0, 40)
+    Btn.Font = Enum.Font.GothamSemibold
+    Btn.Text = name
+    Btn.TextSize = 14
+    Btn.ZIndex = 3
+    MakeTextNeonWhite(Btn)
+    
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 6)
+    BtnCorner.Parent = Btn
+    
+    local BtnGlow = Instance.new("UIStroke")
+    BtnGlow.Parent = Btn
+    BtnGlow.Color = glowColor
+    BtnGlow.Thickness = 1.5
+    BtnGlow.Transparency = 0.5
+    
+    Btn.MouseButton1Click:Connect(function()
+        Btn.BackgroundColor3 = Color3.fromRGB(10 + (glowColor.R*30), 15 + (glowColor.G*30), 30 + (glowColor.B*30))
+        Btn.BackgroundTransparency = 0
+        BtnGlow.Thickness = 2.5
+        BtnGlow.Transparency = 0
+        
+        task.spawn(function()
+            task.wait(0.15)
+            Btn.BackgroundColor3 = Color3.fromRGB(10, 15, 30)
+            Btn.BackgroundTransparency = 0.2
+            BtnGlow.Thickness = 1.5
+            BtnGlow.Transparency = 0.5
+        end)
+        
+        callback()
+    end)
+end
+
+-- Function for Player Selection (Cycles through players)
+local function CreatePlayerSelect(parentPage, name, glowColor, callback)
+    local Frame = Instance.new("Frame")
+    Frame.Parent = parentPage
+    Frame.BackgroundColor3 = Color3.fromRGB(10, 15, 30)
+    Frame.BackgroundTransparency = 0.2
+    Frame.BorderSizePixel = 0
+    Frame.Size = UDim2.new(1, -10, 0, 40)
+    Frame.ZIndex = 3
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Frame
+    
+    local Glow = Instance.new("UIStroke")
+    Glow.Parent = Frame
+    Glow.Color = glowColor
+    Glow.Thickness = 1.5
+    Glow.Transparency = 0.5
+
+    local Title = Instance.new("TextLabel")
+    Title.Parent = Frame
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 10, 0, 0)
+    Title.Size = UDim2.new(0.35, 0, 1, 0)
+    Title.Font = Enum.Font.GothamSemibold
+    Title.Text = name
+    Title.TextSize = 13
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.ZIndex = 3
+    MakeTextNeonWhite(Title)
+
+    local PrevBtn = Instance.new("TextButton")
+    PrevBtn.Parent = Frame
+    PrevBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 50)
+    PrevBtn.Position = UDim2.new(0.4, 0, 0.15, 0)
+    PrevBtn.Size = UDim2.new(0.1, 0, 0.7, 0)
+    PrevBtn.Font = Enum.Font.GothamBold
+    PrevBtn.Text = "<"
+    PrevBtn.TextSize = 14
+    PrevBtn.ZIndex = 3
+    MakeTextNeonWhite(PrevBtn)
+    local pCorner = Instance.new("UICorner") pCorner.CornerRadius = UDim.new(0, 4) pCorner.Parent = PrevBtn
+
+    local NextBtn = Instance.new("TextButton")
+    NextBtn.Parent = Frame
+    NextBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 50)
+    NextBtn.Position = UDim2.new(0.85, 0, 0.15, 0)
+    NextBtn.Size = UDim2.new(0.1, 0, 0.7, 0)
+    NextBtn.Font = Enum.Font.GothamBold
+    NextBtn.Text = ">"
+    NextBtn.TextSize = 14
+    NextBtn.ZIndex = 3
+    MakeTextNeonWhite(NextBtn)
+    local nCorner = Instance.new("UICorner") nCorner.CornerRadius = UDim.new(0, 4) nCorner.Parent = NextBtn
+
+    local TargetLbl = Instance.new("TextLabel")
+    TargetLbl.Parent = Frame
+    TargetLbl.BackgroundTransparency = 1
+    TargetLbl.Position = UDim2.new(0.5, 0, 0, 0)
+    TargetLbl.Size = UDim2.new(0.35, 0, 1, 0)
+    TargetLbl.Font = Enum.Font.Gotham
+    TargetLbl.Text = "None"
+    TargetLbl.TextSize = 12
+    TargetLbl.ZIndex = 3
+    MakeTextNeonWhite(TargetLbl)
+
+    local currentIndex = 1
+    
+    local function getTarget()
+        local plrs = Players:GetPlayers()
+        local valid = {}
+        for _, p in pairs(plrs) do
+            if p ~= player then
+                table.insert(valid, p)
+            end
+        end
+        return valid
+    end
+
+    local function updateSelection()
+        local valid = getTarget()
+        if #valid == 0 then
+            TargetLbl.Text = "No Players"
+            callback(nil)
+            return
+        end
+        
+        if currentIndex > #valid then currentIndex = 1 end
+        if currentIndex < 1 then currentIndex = #valid end
+        
+        local selected = valid[currentIndex]
+        TargetLbl.Text = selected.Name
+        callback(selected)
+    end
+
+    PrevBtn.MouseButton1Click:Connect(function()
+        currentIndex = currentIndex - 1
+        updateSelection()
+    end)
+
+    NextBtn.MouseButton1Click:Connect(function()
+        currentIndex = currentIndex + 1
+        updateSelection()
+    end)
+
+    -- Click the label to refresh the list just in case
+    local RefreshBtn = Instance.new("TextButton")
+    RefreshBtn.Parent = Frame
+    RefreshBtn.BackgroundTransparency = 1
+    RefreshBtn.Position = TargetLbl.Position
+    RefreshBtn.Size = TargetLbl.Size
+    RefreshBtn.Text = ""
+    RefreshBtn.ZIndex = 4
+    RefreshBtn.MouseButton1Click:Connect(updateSelection)
+
+    updateSelection()
+end
+
 -- ==========================================
--- TABS & CHEATS SETUP
+-- TABS & CHEATS SETUP (Galaxy Colors)
 -- ==========================================
-local CombatTab = CreateTab("Combat")
+local CombatTab = CreateTab("Combat / Troll")
 local MovementTab = CreateTab("Movement")
 local MiscTab = CreateTab("Misc / Visuals")
 
 -- COMBAT SCRIPTS
-CreateToggle(CombatTab, "Aimbot (Hold RMB)", Color3.fromRGB(255, 50, 50), function(state)
+CreateToggle(CombatTab, "Aimbot (Hold RMB)", Color3.fromRGB(0, 200, 255), function(state)
     isAimbotting = state
 end)
 
-CreateToggle(CombatTab, "ESP (Red Box)", Color3.fromRGB(255, 0, 0), function(state)
+CreateToggle(CombatTab, "ESP (Red Box)", Color3.fromRGB(255, 50, 100), function(state)
     espEnabled = state
 end)
 
@@ -333,17 +596,30 @@ CreateToggle(CombatTab, "God Mode", Color3.fromRGB(255, 215, 0), function(state)
     end
 end)
 
-CreateToggle(CombatTab, "Hitbox Expander", Color3.fromRGB(200, 50, 255), function(state)
+CreateToggle(CombatTab, "Hitbox Expander", Color3.fromRGB(150, 50, 255), function(state)
     hitboxEnabled = state
 end)
 
-CreateSlider(CombatTab, "Hitbox Size", 2, 50, 10, Color3.fromRGB(200, 50, 255), function(val)
+CreateSlider(CombatTab, "Hitbox Size", 2, 50, 10, Color3.fromRGB(150, 50, 255), function(val)
     hitboxSize = val
+end)
+
+-- BACK AND FORTH SCRIPT SECTION
+CreatePlayerSelect(CombatTab, "Target Player", Color3.fromRGB(255, 100, 200), function(target)
+    selectedBnfTarget = target
+end)
+
+CreateToggle(CombatTab, "Go! (Back & Forth)", Color3.fromRGB(255, 50, 150), function(state)
+    bnfEnabled = state
+    -- Reset platform stand if we disable it
+    if not state and not flying and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.PlatformStand = false
+    end
 end)
 
 
 -- MOVEMENT SCRIPTS
-CreateToggle(MovementTab, "Flight Mode", Color3.fromRGB(255, 0, 128), function(state)
+CreateToggle(MovementTab, "Flight Mode", Color3.fromRGB(50, 100, 255), function(state)
     if state then
         local char = player.Character or player.CharacterAdded:Wait()
         local hrp = char:WaitForChild("HumanoidRootPart")
@@ -362,38 +638,81 @@ CreateToggle(MovementTab, "Flight Mode", Color3.fromRGB(255, 0, 128), function(s
         if bg then bg:Destroy() end
         if bv then bv:Destroy() end
         if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.PlatformStand = false
+            -- Make sure we aren't currently using the back and forth feature
+            if not bnfEnabled then
+                player.Character.Humanoid.PlatformStand = false
+            end
         end
     end
 end)
 
-CreateToggle(MovementTab, "Infinite Jump", Color3.fromRGB(0, 255, 128), function(state)
+CreateToggle(MovementTab, "Vehicle Fly", Color3.fromRGB(255, 100, 50), function(state) -- Neon Orange
+    vFlyEnabled = state
+end)
+
+CreateSlider(MovementTab, "Vehicle Fly Speed", 10, 500, 50, Color3.fromRGB(255, 100, 50), function(val)
+    vFlySpeed = val
+end)
+
+CreateToggle(MovementTab, "Swim Mid-Air", Color3.fromRGB(0, 255, 200), function(state) -- Neon Cyan
+    swimEnabled = state
+    if not state and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    end
+end)
+
+CreateToggle(MovementTab, "Infinite Jump", Color3.fromRGB(0, 255, 150), function(state)
     infJump = state
 end)
 
-CreateToggle(MovementTab, "Noclip", Color3.fromRGB(128, 0, 255), function(state)
+CreateToggle(MovementTab, "Noclip", Color3.fromRGB(200, 100, 255), function(state)
     noclip = state
 end)
 
-CreateSlider(MovementTab, "WalkSpeed", 16, 300, 16, Color3.fromRGB(255, 255, 0), function(val)
+CreateSlider(MovementTab, "WalkSpeed", 16, 300, 16, Color3.fromRGB(0, 150, 255), function(val)
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = val
     end
 end)
 
-CreateSlider(MovementTab, "JumpPower", 50, 300, 50, Color3.fromRGB(0, 128, 255), function(val)
+CreateSlider(MovementTab, "JumpPower", 50, 300, 50, Color3.fromRGB(0, 150, 255), function(val)
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.UseJumpPower = true
         player.Character.Humanoid.JumpPower = val
     end
 end)
 
-CreateSlider(MovementTab, "Flight Speed", 10, 500, 50, Color3.fromRGB(255, 128, 0), function(val)
+CreateSlider(MovementTab, "Flight Speed", 10, 500, 50, Color3.fromRGB(50, 100, 255), function(val)
     speed = val
 end)
 
-
 -- MISC / VISUALS SCRIPTS
+CreateButton(MiscTab, "Get Teleport Tool (Click TP)", Color3.fromRGB(200, 50, 255), function() -- Magenta
+    local tool = Instance.new("Tool")
+    tool.Name = "Click TP"
+    tool.RequiresHandle = false
+    tool.Parent = player.Backpack
+    
+    tool.Activated:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hit = mouse.Hit
+            if hit then
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(hit.Position + Vector3.new(0, 3, 0))
+            end
+        end
+    end)
+end)
+
+CreateButton(MiscTab, "Explode Body", Color3.fromRGB(255, 50, 50), function() -- Red
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local exp = Instance.new("Explosion")
+        exp.Position = player.Character.HumanoidRootPart.Position
+        exp.ExplosionType = Enum.ExplosionType.NoCraters
+        exp.Parent = workspace
+        player.Character:BreakJoints()
+    end
+end)
+
 CreateToggle(MiscTab, "Fullbright", Color3.fromRGB(255, 255, 255), function(state)
     isFullbright = state
     if state then
@@ -413,15 +732,15 @@ CreateToggle(MiscTab, "Fullbright", Color3.fromRGB(255, 255, 255), function(stat
     end
 end)
 
-CreateToggle(MiscTab, "Spinbot", Color3.fromRGB(0, 255, 255), function(state)
+CreateToggle(MiscTab, "Spinbot", Color3.fromRGB(100, 200, 255), function(state)
     spinbotEnabled = state
 end)
 
-CreateSlider(MiscTab, "Spin Speed", 10, 150, 25, Color3.fromRGB(0, 255, 255), function(val)
+CreateSlider(MiscTab, "Spin Speed", 10, 150, 25, Color3.fromRGB(100, 200, 255), function(val)
     spinSpeed = val
 end)
 
-CreateSlider(MiscTab, "Field of View (FOV)", 70, 120, 70, Color3.fromRGB(0, 255, 100), function(val)
+CreateSlider(MiscTab, "Field of View (FOV)", 70, 120, 70, Color3.fromRGB(50, 255, 100), function(val)
     Camera.FieldOfView = val
 end)
 
@@ -485,6 +804,33 @@ runService.RenderStepped:Connect(function()
         end
     end
     
+    -- BACK AND FORTH (Hover behind target)
+    if bnfEnabled and selectedBnfTarget and selectedBnfTarget.Character and selectedBnfTarget.Character:FindFirstChild("HumanoidRootPart") then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") then
+            -- Force PlatformStand so the physics engine doesn't pull you down
+            player.Character.Humanoid.PlatformStand = true
+            
+            -- Calculate fast back and forth motion using Sine wave
+            local t = tick() * 25 -- multiplier controls the speed of the back and forth
+            local offsetZ = 1.0 + math.sin(t) * 1.5 -- oscillates rapidly right behind the target
+            
+            local targetHRP = selectedBnfTarget.Character.HumanoidRootPart
+            local myHRP = player.Character.HumanoidRootPart
+            
+            -- Teleport directly behind them + offset
+            myHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0, offsetZ)
+            
+            -- Keep velocity 0 so we don't drift or glitch out
+            myHRP.Velocity = Vector3.new(0,0,0)
+            myHRP.RotVelocity = Vector3.new(0,0,0)
+        end
+    end
+    
+    -- SWIM MID AIR
+    if swimEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+    end
+    
     -- FULLBRIGHT
     if isFullbright then
         lighting.Ambient = Color3.new(1, 1, 1)
@@ -508,6 +854,44 @@ runService.RenderStepped:Connect(function()
         bg.cframe = Camera.CFrame
     end
     
+    -- VEHICLE FLY
+    if vFlyEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        local seat = player.Character.Humanoid.SeatPart
+        if seat then
+            if not vbg or vbg.Parent ~= seat then
+                if vbg then vbg:Destroy() end
+                if vbv then vbv:Destroy() end
+                vbg = Instance.new("BodyGyro", seat)
+                vbg.P = 9e4
+                vbg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+                vbv = Instance.new("BodyVelocity", seat)
+                vbv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+            end
+            
+            vbg.cframe = Camera.CFrame
+            
+            local moveVector = Vector3.new(0, 0, 0)
+            if userInputService:IsKeyDown(Enum.KeyCode.W) then moveVector = moveVector + Camera.CFrame.LookVector end
+            if userInputService:IsKeyDown(Enum.KeyCode.S) then moveVector = moveVector - Camera.CFrame.LookVector end
+            if userInputService:IsKeyDown(Enum.KeyCode.A) then moveVector = moveVector - Camera.CFrame.RightVector end
+            if userInputService:IsKeyDown(Enum.KeyCode.D) then moveVector = moveVector + Camera.CFrame.RightVector end
+            if userInputService:IsKeyDown(Enum.KeyCode.Space) then moveVector = moveVector + Vector3.new(0, 1, 0) end
+            if userInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveVector = moveVector - Vector3.new(0, 1, 0) end
+
+            if moveVector.Magnitude > 0 then
+                vbv.velocity = moveVector.Unit * vFlySpeed
+            else
+                vbv.velocity = Vector3.new(0, 0, 0)
+            end
+        else
+            if vbg then vbg:Destroy() vbg = nil end
+            if vbv then vbv:Destroy() vbv = nil end
+        end
+    else
+        if vbg then vbg:Destroy() vbg = nil end
+        if vbv then vbv:Destroy() vbv = nil end
+    end
+    
     -- HITBOX EXPANDER
     for _, plyr in pairs(Players:GetPlayers()) do
         if plyr ~= player and plyr.Character and plyr.Character:FindFirstChild("HumanoidRootPart") then
@@ -517,7 +901,7 @@ runService.RenderStepped:Connect(function()
                 hrp.Transparency = 0.5
                 hrp.CanCollide = false
             else
-                hrp.Size = Vector3.new(2, 2, 1) -- default R6 size, works fine for resetting most R15 as well
+                hrp.Size = Vector3.new(2, 2, 1)
                 hrp.Transparency = 1
             end
         end
