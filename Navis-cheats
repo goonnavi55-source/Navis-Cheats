@@ -29,6 +29,10 @@ local spinSpeed = 25
 local hitboxEnabled = false
 local hitboxSize = 10
 
+local antiGravEnabled = false
+local noRecoilEnabled = false
+local instReloadEnabled = false
+
 local bnfEnabled = false
 local selectedBnfTarget = nil
 
@@ -179,7 +183,7 @@ Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "NAVIS GALAXY"
+Title.Text = "NAVIS V2 - (Press K to Toggle)"
 Title.TextSize = 18
 Title.ZIndex = 2
 MakeTextNeonWhite(Title)
@@ -604,6 +608,14 @@ CreateSlider(CombatTab, "Hitbox Size", 2, 50, 10, Color3.fromRGB(150, 50, 255), 
     hitboxSize = val
 end)
 
+CreateToggle(CombatTab, "No Recoil (Generic)", Color3.fromRGB(255, 150, 50), function(state)
+    noRecoilEnabled = state
+end)
+
+CreateToggle(CombatTab, "Insta-Reload (Generic)", Color3.fromRGB(50, 255, 150), function(state)
+    instReloadEnabled = state
+end)
+
 -- TARGET PLAYER SCRIPT SECTION
 CreatePlayerSelect(CombatTab, "Target Player", Color3.fromRGB(255, 100, 200), function(target)
     selectedBnfTarget = target
@@ -632,7 +644,12 @@ CreateButton(CombatTab, "Explode Target Player", Color3.fromRGB(255, 50, 50), fu
     end
 end)
 
+
 -- MOVEMENT SCRIPTS
+CreateToggle(MovementTab, "Anti-Gravity", Color3.fromRGB(150, 255, 100), function(state)
+    antiGravEnabled = state
+end)
+
 CreateToggle(MovementTab, "Flight Mode", Color3.fromRGB(50, 100, 255), function(state)
     if state then
         local char = player.Character or player.CharacterAdded:Wait()
@@ -809,6 +826,25 @@ runService.RenderStepped:Connect(function()
         end
     end
 
+    -- GENERIC GUN MODS
+    if (noRecoilEnabled or instReloadEnabled) and player.Character then
+        local tool = player.Character:FindFirstChildOfClass("Tool")
+        if tool then
+            for _, v in pairs(tool:GetDescendants()) do
+                if noRecoilEnabled and (v.Name:lower():match("recoil") or v.Name:lower():match("kick") or v.Name:lower():match("spread")) then
+                    if v:IsA("NumberValue") or v:IsA("IntValue") then
+                        v.Value = 0
+                    end
+                end
+                if instReloadEnabled and (v.Name:lower():match("reload") or v.Name:lower():match("cooldown") or v.Name:lower():match("wait")) then
+                    if v:IsA("NumberValue") or v:IsA("IntValue") then
+                        v.Value = 0
+                    end
+                end
+            end
+        end
+    end
+
     -- GOD MODE
     if godModeEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
         local hum = player.Character.Humanoid
@@ -840,6 +876,30 @@ runService.RenderStepped:Connect(function()
         end
     end
     
+    -- ANTI-GRAVITY
+    if antiGravEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character.HumanoidRootPart
+        if not hrp:FindFirstChild("AntiGravityForce") then
+            local force = Instance.new("BodyForce")
+            force.Name = "AntiGravityForce"
+            local totalMass = 0
+            for _, part in pairs(player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    totalMass = totalMass + part.Mass
+                end
+            end
+            force.Force = Vector3.new(0, totalMass * workspace.Gravity, 0)
+            force.Parent = hrp
+        end
+    else
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local force = player.Character.HumanoidRootPart:FindFirstChild("AntiGravityForce")
+            if force then
+                force:Destroy()
+            end
+        end
+    end
+
     -- SWIM MID AIR
     if swimEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
